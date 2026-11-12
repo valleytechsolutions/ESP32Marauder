@@ -45,6 +45,12 @@
   //#define MARAUDER_M5_NANO_C6
   //#define DUAL_MINI_C5
   //#define MARAUDER_POOM
+  // Waveshare ESP32-C6-LCD-1.47 board. ESP32-C6 (RISC-V, single core,
+  // 2.4GHz-only Wi-Fi 6 + BLE 5, 4MB flash, no PSRAM), ST7789 172x320 SPI
+  // panel, microSD on the same SPI bus, one RGB LED. Pins per Waveshare's
+  // own docs (docs.waveshare.com/ESP32-C6-LCD-1.47); verify against the
+  // schematic before first flash.
+  //#define MARAUDER_WS_C6_LCD_147
   // Waveshare ESP32-C5-Touch-LCD-3.5 board. Same silicon/panel class as the
   // Pancake V8 (ESP32-C5, ST7796 320x480, FT6336), so reuse Pancake's verified
   // C5 feature + geometry logic and override only this board's differing pins below.
@@ -143,6 +149,8 @@
     #define HARDWARE_NAME "Dual Mini C5"
   #elif defined(MARAUDER_M5_NANO_C6)
     #define HARDWARE_NAME "M5 Nano C6"
+  #elif defined(MARAUDER_WS_C6_LCD_147)
+    #define HARDWARE_NAME "Waveshare ESP32-C6-LCD-1.47"
   #elif defined(MARAUDER_POOM)
     #define HARDWARE_NAME "POOM"
   #else
@@ -755,6 +763,40 @@
     #define HAS_NIMBLE_2
     #define HAS_IDF_3
     //#define HAS_DIRECT_UPLOAD
+  #endif
+
+  #if defined(MARAUDER_WS_C6_LCD_147)
+    // True ESP32-C6 silicon: 2.4GHz-only, no HAS_DUAL_BAND (that flag means
+    // 5GHz capability, which only the C5 has -- do not define it here).
+    //#define HAS_TOUCH
+    //#define FLIPPER_ZERO_HAT
+    //#define HAS_BATTERY
+    #define HAS_BT
+    //#define HAS_BUTTONS
+    #define HAS_NEOPIXEL_LED
+    //#define HAS_PWR_MGMT
+    #define HAS_SCREEN
+    // A validated 172x320 Marauder port (Seeed XIAO-S3-Plus-1.47, same
+    // panel resolution) ships with HAS_FULL_SCREEN defined, so set it here
+    // too rather than leaving it a guess.
+    #define HAS_FULL_SCREEN
+    //#define HAS_GPS
+    // Waveshare's docs confirm a real onboard TF slot on dedicated pins
+    // (CS4/MISO5, sharing SCLK7/MOSI6 with the LCD) -- unlike the XIAO-S3
+    // 1.47" port, which left SD disabled because the touch controller
+    // shared the display's reset line. No such conflict exists here.
+    // Still: bring the board up with SD left disabled below first, confirm
+    // basic UI/WiFi works, then enable SD once that's verified, rather than
+    // testing everything at once on first flash.
+    #define HAS_C5_SD
+    #define HAS_SD
+    #define USE_SD
+    //#define HAS_DUAL_BAND
+    //#define HAS_PSRAM
+    //#define HAS_TEMP_SENSOR
+    #define HAS_NIMBLE_2
+    #define HAS_IDF_3
+    #define HAS_DIRECT_UPLOAD
   #endif
 
   // The bare XIAO carrier has no SD hardware. Keep the capability absent even
@@ -2921,6 +2963,10 @@
       #define SD_CS 5
     #endif
 
+    #ifdef MARAUDER_WS_C6_LCD_147
+      #define SD_CS 4 // shares the LCD's SPI bus (MOSI 6 / SCLK 7)
+    #endif
+
   #endif
   //// END SD DEFINITIONS
 
@@ -3067,6 +3113,8 @@
       #define PIN 21
     #elif defined(MARAUDER_M5_NANO_C6)
       #define PIN 20
+    #elif defined(MARAUDER_WS_C6_LCD_147)
+      #define PIN 8
     #else
       #define PIN 25
     #endif
